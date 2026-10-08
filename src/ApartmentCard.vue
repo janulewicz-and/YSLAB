@@ -9,23 +9,28 @@ const metaStore = useMetaStore()
 
 const meta = metaStore.meta!
 
-const showPrice = computed(() => meta.settings.showPrice)
+const showPrice = computed(() => meta.settings.showPrice ?? true)
 
-const planUrl = computed(
-  () => `${meta.assetsBaseUrl}/${meta.apps.apartmentGallery.plans[props.apartment.mappingName]}`,
-)
+const planUrl = computed(() => {
+  const gallery = meta.apps.apartmentGallery
+  if (!gallery?.enabled) return null
+  const plan = gallery.plans[props.apartment.mappingName]
+  return plan ? `${meta.assetsBaseUrl}/${plan}` : null
+})
 
 const formatPrice = (value: number) => meta.settings.currencyFormatter.format(value)
 
 // same helper as in ApartmentsList.vue. do not merge them into one, both files get
 // copied into every client separately and some clients already overrode this one
+const areaUnit = meta.settings.defaultAreaUnit === 'ft2' ? 'ft²' : 'm²'
+
 const formatArea = (value: number) =>
-  `${value.toFixed(meta.filters.area.withDecimals ? 2 : 0)} m²`
+  `${value.toFixed(meta.filters.area.withDecimals ? 2 : 0)} ${areaUnit}`
 </script>
 
 <template>
   <article class="apartment-card">
-    <img :src="planUrl" :alt="apartment.mappingName" />
+    <img v-if="planUrl" :src="planUrl" :alt="apartment.mappingName" />
 
     <span class="apartment-card__name">{{ apartment.mappingName }}</span>
     <span class="apartment-card__area">{{ formatArea(apartment.area) }}</span>
