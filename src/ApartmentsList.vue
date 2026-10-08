@@ -4,11 +4,12 @@ import ApartmentCard from './ApartmentCard.vue'
 import { useApartmentsStore } from './store/apartments'
 import { useMetaStore } from './store/meta'
 import type { FiltersStatus } from './models/apartment.model'
+import { storeToRefs } from 'pinia'
 
 const apartmentsStore = useApartmentsStore()
 const metaStore = useMetaStore()
 
-const { visibleApartments, activeStatus } = apartmentsStore
+const { visibleApartments, activeStatus } = storeToRefs(apartmentsStore)
 
 const meta = metaStore.meta!
 
@@ -17,7 +18,7 @@ const meta = metaStore.meta!
 const buildingCount = meta.buildings.length
 
 const sortedApartments = computed(() =>
-  visibleApartments.sort((a, b) => a.price - b.price),
+  [...visibleApartments.value].sort((a, b) => a.price - b.price),
 )
 
 const areaRange = computed(() => {
@@ -28,8 +29,10 @@ const areaRange = computed(() => {
 
 // same helper as in ApartmentCard.vue. do not merge them into one, both files get
 // copied into every client separately and some clients already overrode this one
+const areaUnit = meta.settings.defaultAreaUnit === 'ft2' ? 'ft²' : 'm²'
+
 const formatArea = (value: number) =>
-  `${value.toFixed(meta.filters.area.withDecimals ? 2 : 0)} m²`
+  `${value.toFixed(meta.filters.area.withDecimals ? 2 : 0)} ${areaUnit}`
 
 const onStatusChange = (event: Event) => {
   apartmentsStore.setActiveStatus((event.target as HTMLSelectElement).value as FiltersStatus)
